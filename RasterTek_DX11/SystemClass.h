@@ -39,6 +39,6 @@ private:
 
 static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
-static SystemClass* ApplicationHandle = 0;
+static SystemClass* ApplicationHandle = nullptr;
 
 #endif
