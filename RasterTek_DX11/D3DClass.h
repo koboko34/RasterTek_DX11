@@ -50,9 +50,9 @@ public:
 	ID3D11Device* GetDevice() const { return m_Device; }
 	ID3D11DeviceContext* GetDeviceContext() const { return m_DeviceContext; }
 
-	DirectX::XMMATRIX GetProjectionMatrix() const { return m_ProjectionMatrix; }
-	DirectX::XMMATRIX GetWorldMatrix() const { return m_WorldMatrix; }
-	DirectX::XMMATRIX GetOrthoMatrix() const { return m_OrthoMatrix; }
+	void GetWorldMatrix(DirectX::XMMATRIX& WorldMatrix) { WorldMatrix = m_WorldMatrix; }
+	void GetProjectionMatrix(DirectX::XMMATRIX& ProjectionMatrix) { ProjectionMatrix = m_ProjectionMatrix; }
+	void GetOrthoMatrix(DirectX::XMMATRIX& OrthoMatrix) { OrthoMatrix = m_OrthoMatrix; }
 };
 
 #endif
