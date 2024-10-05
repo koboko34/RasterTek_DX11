@@ -1,5 +1,7 @@
 #include "D3DClass.h"
 
+#include "MyMacros.h"
+
 D3DClass::D3DClass()
 {
 	m_SwapChain = 0;
@@ -22,7 +24,7 @@ D3DClass::~D3DClass()
 
 bool D3DClass::Initialise(int ScreenWidth, int ScreenHeight, bool VSync, HWND hwnd, bool Fullscreen, float ScreenDepth, float ScreenNear)
 {
-	HRESULT Result;
+	HRESULT hResult;
 	IDXGIFactory* Factory;
 	IDXGIAdapter* Adapter;
 	IDXGIOutput* AdapterOutput;
@@ -42,30 +44,13 @@ bool D3DClass::Initialise(int ScreenWidth, int ScreenHeight, bool VSync, HWND hw
 
 	m_VSync_Enabled = VSync;
 
-	Result = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&Factory);
-	if (FAILED(Result))
-	{
-		return false;
-	}
-
-	Result = Factory->EnumAdapters(0, &Adapter);
-	if (FAILED(Result))
-	{
-		return false;
-	}
-
-	Result = Adapter->EnumOutputs(0, &AdapterOutput);
-	if (FAILED(Result))
-	{
-		return false;
-	}
+	HFALSE_IF_FAILED(CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&Factory));
+	HFALSE_IF_FAILED(Factory->EnumAdapters(0, &Adapter));
+	HFALSE_IF_FAILED(Adapter->EnumOutputs(0, &AdapterOutput));
 
 	// get the number of modes that fir the DXGI_FORMAT_R8G8B8A8_UNORM display format for the adapter output (monitor)
-	Result = AdapterOutput->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &NumModes, NULL);
-	if (FAILED(Result))
-	{
-		return false;
-	}
+	HFALSE_IF_FAILED(AdapterOutput->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &NumModes, NULL));
+
 
 	// create a list to hold all the possible display modes for this monitor/video card combination
 	DisplayModeList = new DXGI_MODE_DESC[NumModes];
@@ -74,11 +59,7 @@ bool D3DClass::Initialise(int ScreenWidth, int ScreenHeight, bool VSync, HWND hw
 		return false;
 	}
 	
-	Result = AdapterOutput->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &NumModes, DisplayModeList);
-	if (FAILED(Result))
-	{
-		return false;
-	}
+	HFALSE_IF_FAILED(AdapterOutput->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &NumModes, DisplayModeList));
 
 	for (int i = 0; i < NumModes; i++)
 	{
@@ -92,11 +73,7 @@ bool D3DClass::Initialise(int ScreenWidth, int ScreenHeight, bool VSync, HWND hw
 		}
 	}
 
-	Result = Adapter->GetDesc(&AdapterDesc);
-	if (FAILED(Result))
-	{
-		return false;
-	}
+	HFALSE_IF_FAILED(Adapter->GetDesc(&AdapterDesc));
 
 	m_VideoCardMemory = (int)(AdapterDesc.DedicatedVideoMemory / 1024 / 1024);
 
@@ -157,23 +134,9 @@ bool D3DClass::Initialise(int ScreenWidth, int ScreenHeight, bool VSync, HWND hw
 
 	FeatureLevel = D3D_FEATURE_LEVEL_11_0;
 
-	Result = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, 0, &FeatureLevel, 1, D3D11_SDK_VERSION, &SwapChainDesc, &m_SwapChain, &m_Device, NULL, &m_DeviceContext);
-	if (FAILED(Result))
-	{
-		return false;
-	}
-
-	Result = m_SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&BackBufferPtr);
-	if (FAILED(Result))
-	{
-		return false;
-	}
-
-	Result = m_Device->CreateRenderTargetView(BackBufferPtr, NULL, &m_RenderTargetView);
-	if (FAILED(Result))
-	{
-		return false;
-	}
+	HFALSE_IF_FAILED(D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, 0, &FeatureLevel, 1, D3D11_SDK_VERSION, &SwapChainDesc, &m_SwapChain, &m_Device, NULL, &m_DeviceContext));
+	HFALSE_IF_FAILED(m_SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&BackBufferPtr));
+	HFALSE_IF_FAILED(m_Device->CreateRenderTargetView(BackBufferPtr, NULL, &m_RenderTargetView));
 
 	BackBufferPtr->Release();
 	BackBufferPtr = 0;
@@ -190,11 +153,7 @@ bool D3DClass::Initialise(int ScreenWidth, int ScreenHeight, bool VSync, HWND hw
 	DepthBufferDesc.CPUAccessFlags = 0;
 	DepthBufferDesc.MiscFlags = 0;
 
-	Result = m_Device->CreateTexture2D(&DepthBufferDesc, NULL, &m_DepthStencilBuffer);
-	if (FAILED(Result))
-	{
-		return false;
-	}
+	HFALSE_IF_FAILED(m_Device->CreateTexture2D(&DepthBufferDesc, NULL, &m_DepthStencilBuffer));
 
 	DepthStencilDesc.DepthEnable = true;
 	DepthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
@@ -214,11 +173,7 @@ bool D3DClass::Initialise(int ScreenWidth, int ScreenHeight, bool VSync, HWND hw
 	DepthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 	DepthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 
-	Result = m_Device->CreateDepthStencilState(&DepthStencilDesc, &m_DepthStencilState);
-	if (FAILED(Result))
-	{
-		return false;
-	}
+	HFALSE_IF_FAILED(m_Device->CreateDepthStencilState(&DepthStencilDesc, &m_DepthStencilState));
 
 	m_DeviceContext->OMSetDepthStencilState(m_DepthStencilState, 1);
 
@@ -226,11 +181,7 @@ bool D3DClass::Initialise(int ScreenWidth, int ScreenHeight, bool VSync, HWND hw
 	DepthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	DepthStencilViewDesc.Texture2D.MipSlice = 0;
 
-	Result = m_Device->CreateDepthStencilView(m_DepthStencilBuffer, &DepthStencilViewDesc, &m_DepthStencilView);
-	if (FAILED(Result))
-	{
-		return false;
-	}
+	HFALSE_IF_FAILED(m_Device->CreateDepthStencilView(m_DepthStencilBuffer, &DepthStencilViewDesc, &m_DepthStencilView));
 
 	m_DeviceContext->OMSetRenderTargets(1, &m_RenderTargetView, m_DepthStencilView);
 
@@ -245,11 +196,7 @@ bool D3DClass::Initialise(int ScreenWidth, int ScreenHeight, bool VSync, HWND hw
 	RasterDesc.ScissorEnable = false;
 	RasterDesc.SlopeScaledDepthBias = 0.f;
 
-	Result = m_Device->CreateRasterizerState(&RasterDesc, &m_RasterState);
-	if (FAILED(Result))
-	{
-		return false;
-	}
+	HFALSE_IF_FAILED(m_Device->CreateRasterizerState(&RasterDesc, &m_RasterState));
 
 	m_DeviceContext->RSSetState(m_RasterState);
 

@@ -22,7 +22,6 @@ bool ModelClass::Initialise(ID3D11Device* Device, ID3D11DeviceContext* DeviceCon
 	bool Result;
 	
 	FALSE_IF_FAILED(InitialiseBuffers(Device));
-	
 	FALSE_IF_FAILED(LoadTexture(Device, DeviceContext, TextureFilename));
 	
 	return true;
@@ -47,7 +46,7 @@ bool ModelClass::InitialiseBuffers(ID3D11Device* Device)
 	D3D11_BUFFER_DESC IndexBufferDesc = {};
 	D3D11_SUBRESOURCE_DATA VertexData = {};
 	D3D11_SUBRESOURCE_DATA IndexData = {};
-	HRESULT Result;
+	HRESULT hResult;
 
 	m_VertexCount = 3;
 	m_IndexCount = 3;
@@ -81,11 +80,7 @@ bool ModelClass::InitialiseBuffers(ID3D11Device* Device)
 
 	VertexData.pSysMem = Vertices;
 
-	Result = Device->CreateBuffer(&VertexBufferDesc, &VertexData, &m_VertexBuffer);
-	if (FAILED(Result))
-	{
-		return false;
-	}
+	HFALSE_IF_FAILED(Device->CreateBuffer(&VertexBufferDesc, &VertexData, &m_VertexBuffer));
 
 	IndexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	IndexBufferDesc.ByteWidth = sizeof(unsigned long) * m_IndexCount;
@@ -93,11 +88,7 @@ bool ModelClass::InitialiseBuffers(ID3D11Device* Device)
 
 	IndexData.pSysMem = Indices;
 
-	Result = Device->CreateBuffer(&IndexBufferDesc, &IndexData, &m_IndexBuffer);
-	if (FAILED(Result))
-	{
-		return false;
-	}
+	HFALSE_IF_FAILED(Device->CreateBuffer(&IndexBufferDesc, &IndexData, &m_IndexBuffer));
 	
 	delete[] Vertices;
 	Vertices = 0;

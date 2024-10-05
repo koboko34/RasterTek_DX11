@@ -4,6 +4,8 @@
 #include <cwchar>
 #include<cstring>
 
+#include "MyMacros.h"
+
 TextureShaderClass::TextureShaderClass()
 {
 	m_VertexShader = 0;
@@ -69,7 +71,7 @@ bool TextureShaderClass::Render(ID3D11DeviceContext* DeviceContext, int IndexCou
 
 bool TextureShaderClass::InitialiseShader(ID3D11Device* Device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename)
 {
-	HRESULT Result;
+	HRESULT hResult;
 	ID3D10Blob* ErrorMessage = 0;
 	ID3D10Blob* VertexShaderBuffer = 0;
 	ID3D10Blob* PixelShaderBuffer = 0;
@@ -78,8 +80,8 @@ bool TextureShaderClass::InitialiseShader(ID3D11Device* Device, HWND hwnd, WCHAR
 	D3D11_BUFFER_DESC MatrixBufferDesc = {};
 	D3D11_SAMPLER_DESC SamplerDesc = {};
 
-	Result = D3DCompileFromFile(vsFilename, NULL, NULL, "main", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &VertexShaderBuffer, &ErrorMessage);
-	if (FAILED(Result))
+	hResult = D3DCompileFromFile(vsFilename, NULL, NULL, "main", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &VertexShaderBuffer, &ErrorMessage);
+	if (FAILED(hResult))
 	{
 		if (ErrorMessage)
 		{
@@ -93,8 +95,8 @@ bool TextureShaderClass::InitialiseShader(ID3D11Device* Device, HWND hwnd, WCHAR
 		return false;
 	}
 
-	Result = D3DCompileFromFile(psFilename, NULL, NULL, "main", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &PixelShaderBuffer, &ErrorMessage);
-	if (FAILED(Result))
+	hResult = D3DCompileFromFile(psFilename, NULL, NULL, "main", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &PixelShaderBuffer, &ErrorMessage);
+	if (FAILED(hResult))
 	{
 		if (ErrorMessage)
 		{
@@ -108,17 +110,8 @@ bool TextureShaderClass::InitialiseShader(ID3D11Device* Device, HWND hwnd, WCHAR
 		return false;
 	}
 
-	Result = Device->CreateVertexShader(VertexShaderBuffer->GetBufferPointer(), VertexShaderBuffer->GetBufferSize(), NULL, &m_VertexShader);
-	if (FAILED(Result))
-	{
-		return false;
-	}
-
-	Result = Device->CreatePixelShader(PixelShaderBuffer->GetBufferPointer(), PixelShaderBuffer->GetBufferSize(), NULL, &m_PixelShader);
-	if (FAILED(Result))
-	{
-		return false;
-	}
+	HFALSE_IF_FAILED(Device->CreateVertexShader(VertexShaderBuffer->GetBufferPointer(), VertexShaderBuffer->GetBufferSize(), NULL, &m_VertexShader));
+	HFALSE_IF_FAILED(Device->CreatePixelShader(PixelShaderBuffer->GetBufferPointer(), PixelShaderBuffer->GetBufferSize(), NULL, &m_PixelShader));
 
 	PolygonLayout[0].SemanticName = "POSITION";
 	PolygonLayout[0].SemanticIndex = 0;
@@ -138,11 +131,7 @@ bool TextureShaderClass::InitialiseShader(ID3D11Device* Device, HWND hwnd, WCHAR
 
 	NumElements = sizeof(PolygonLayout) / sizeof(PolygonLayout[0]);
 
-	Result = Device->CreateInputLayout(PolygonLayout, NumElements, VertexShaderBuffer->GetBufferPointer(), VertexShaderBuffer->GetBufferSize(), &m_Layout);
-	if (FAILED(Result))
-	{
-		return false;
-	}
+	HFALSE_IF_FAILED(Device->CreateInputLayout(PolygonLayout, NumElements, VertexShaderBuffer->GetBufferPointer(), VertexShaderBuffer->GetBufferSize(), &m_Layout));
 
 	VertexShaderBuffer->Release();
 	VertexShaderBuffer = 0;
@@ -156,11 +145,7 @@ bool TextureShaderClass::InitialiseShader(ID3D11Device* Device, HWND hwnd, WCHAR
 	MatrixBufferDesc.MiscFlags = 0;
 	MatrixBufferDesc.StructureByteStride = 0;
 
-	Result = Device->CreateBuffer(&MatrixBufferDesc, NULL, &m_MatrixBuffer);
-	if (FAILED(Result))
-	{
-		return false;
-	}
+	HFALSE_IF_FAILED(Device->CreateBuffer(&MatrixBufferDesc, NULL, &m_MatrixBuffer));
 
 	SamplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	SamplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -170,11 +155,7 @@ bool TextureShaderClass::InitialiseShader(ID3D11Device* Device, HWND hwnd, WCHAR
 	SamplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
 	SamplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
-	Result = Device->CreateSamplerState(&SamplerDesc, &m_SampleState);
-	if (FAILED(Result))
-	{
-		return false;
-	}
+	HFALSE_IF_FAILED(Device->CreateSamplerState(&SamplerDesc, &m_SampleState));
 
 	return true;
 }
@@ -259,7 +240,7 @@ void TextureShaderClass::OutputShaderErrorMessage(ID3D10Blob* ErrorMessage, HWND
 
 bool TextureShaderClass::SetShaderParameters(ID3D11DeviceContext* DeviceContext, DirectX::XMMATRIX WorldMatrix, DirectX::XMMATRIX ViewMatrix, DirectX::XMMATRIX ProjectionMatrix, ID3D11ShaderResourceView* Texture)
 {
-	HRESULT Result;
+	HRESULT hResult;
 	D3D11_MAPPED_SUBRESOURCE MappedSubresouce;
 	MatrixBufferType* DataPtr;
 	unsigned int BufferNumber;
@@ -269,11 +250,7 @@ bool TextureShaderClass::SetShaderParameters(ID3D11DeviceContext* DeviceContext,
 	ViewMatrix = DirectX::XMMatrixTranspose(ViewMatrix);
 	ProjectionMatrix = DirectX::XMMatrixTranspose(ProjectionMatrix);
 
-	Result = DeviceContext->Map(m_MatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedSubresouce);
-	if (FAILED(Result))
-	{
-		return false;
-	}
+	HFALSE_IF_FAILED(DeviceContext->Map(m_MatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedSubresouce));
 
 	DataPtr = (MatrixBufferType*)MappedSubresouce.pData;
 
