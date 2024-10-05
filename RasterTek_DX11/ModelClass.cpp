@@ -1,9 +1,12 @@
 #include "ModelClass.h"
 
+#include "MyMacros.h"
+
 ModelClass::ModelClass()
 {
 	m_VertexBuffer = 0;
 	m_IndexBuffer = 0;
+	m_Texture = 0;
 }
 
 ModelClass::ModelClass(const ModelClass&)
@@ -14,19 +17,20 @@ ModelClass::~ModelClass()
 {
 }
 
-bool ModelClass::Initialise(ID3D11Device* Device)
+bool ModelClass::Initialise(ID3D11Device* Device, ID3D11DeviceContext* DeviceContext, char* TextureFilename)
 {
-	bool Result = InitialiseBuffers(Device);
-	if (!Result)
-	{
-		return false;
-	}
+	bool Result;
+	
+	FALSE_IF_FAILED(InitialiseBuffers(Device));
+	
+	FALSE_IF_FAILED(LoadTexture(Device, DeviceContext, TextureFilename));
 	
 	return true;
 }
 
 void ModelClass::Shutdown()
 {
+	ReleaseTexture();
 	ShutdownBuffers();
 }
 
@@ -61,11 +65,11 @@ bool ModelClass::InitialiseBuffers(ID3D11Device* Device)
 	}
 
 	Vertices[0].Position = DirectX::XMFLOAT3(-1.f, -1.f, 0.f);
-	Vertices[0].Color = DirectX::XMFLOAT4(0.f, 0.f, 1.f, 1.f);
+	Vertices[0].TexCoord = DirectX::XMFLOAT2(0.f, 1.f);
 	Vertices[1].Position = DirectX::XMFLOAT3( 0.f,  1.f, 0.f);
-	Vertices[1].Color = DirectX::XMFLOAT4(1.f, 0.f, 0.f, 1.f);
+	Vertices[1].TexCoord = DirectX::XMFLOAT2(0.5f, 0.f);
 	Vertices[2].Position = DirectX::XMFLOAT3( 1.f, -1.f, 0.f);
-	Vertices[2].Color = DirectX::XMFLOAT4(0.f, 1.f, 0.f, 1.f);
+	Vertices[2].TexCoord = DirectX::XMFLOAT2(1.f, 1.f);
 
 	Indices[0] = 0u;
 	Indices[1] = 1u;
@@ -129,4 +133,25 @@ void ModelClass::RenderBuffers(ID3D11DeviceContext* DeviceContext)
 	DeviceContext->IASetVertexBuffers(0u, 1u, &m_VertexBuffer, &Stride, &Offset);
 	DeviceContext->IASetIndexBuffer(m_IndexBuffer, DXGI_FORMAT_R32_UINT, 0u);
 	DeviceContext->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+bool ModelClass::LoadTexture(ID3D11Device* Device, ID3D11DeviceContext* DeviceContext, char* Filename)
+{
+	bool Result;
+
+	m_Texture = new TextureClass();
+
+	FALSE_IF_FAILED(m_Texture->Initialise(Device, DeviceContext, Filename));
+	
+	return true;
+}
+
+void ModelClass::ReleaseTexture()
+{
+	if (m_Texture)
+	{
+		m_Texture->Shutdown();
+		delete m_Texture;
+		m_Texture = 0;
+	}
 }

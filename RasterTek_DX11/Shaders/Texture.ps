@@ -1,0 +1,14 @@
+Texture2D ShaderTexture : register(t0);
+SamplerState Sampler : register(s0);
+
+struct PS_In
+{
+	float4 Pos : SV_POSITION;
+	float2 TexCoord : TEXCOORD0;
+};
+
+
+float4 main(PS_In p) : SV_TARGET
+{
+	return ShaderTexture.Sample(Sampler, p.TexCoord);
+}
