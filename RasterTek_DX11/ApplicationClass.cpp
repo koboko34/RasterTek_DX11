@@ -35,7 +35,7 @@ bool ApplicationClass::Initialise(int ScreenWidth, int ScreenHeight, HWND hwnd)
 	m_Camera = new CameraClass();
 	m_Camera->SetPosition(0.f, 0.f, -10.f);
 
-	strcpy_s(ModelFilename, "Models/cube.txt");
+	strcpy_s(ModelFilename, "Models/sphere.txt");
 	strcpy_s(TextureFilename, "Textures/stone01.tga");
 
 	m_Model = new ModelClass();
@@ -57,7 +57,9 @@ bool ApplicationClass::Initialise(int ScreenWidth, int ScreenHeight, HWND hwnd)
 	m_Light = new Light();
 	m_Light->SetAmbientColor(0.2f, 0.2f, 0.2f, 1.f);
 	m_Light->SetDiffuseColor(1.f, 1.f, 1.f, 1.f);
-	m_Light->SetDirection(0.f, 0.f, 1.f);
+	m_Light->SetDirection(0.5f, -0.7f, 0.7f);
+	m_Light->SetSpecularColor(1.f, 1.f, 1.f, 1.f);
+	m_Light->SetSpecularPower(32.f);
 
 	return true;
 }
@@ -136,22 +138,22 @@ bool ApplicationClass::Render(float Rotation)
 
 	m_Model->Render(m_Direct3D->GetDeviceContext());
 
-	Result = m_LightShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), WorldMatrix, ViewMatrix, ProjectionMatrix, m_Model->GetTexture(),
-									m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor());
+	Result = m_LightShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), WorldMatrix, ViewMatrix, ProjectionMatrix, m_Model->GetTexture(), m_Camera->GetPosition(),
+									m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(), m_Light->GetDirection(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
 	if (!Result)
 	{
 		return false;
 	}
 
-	ScaleMatrix = DirectX::XMMatrixScaling(0.5f, 0.5f, 0.5f);
+	ScaleMatrix = DirectX::XMMatrixScaling(1.5f, 1.5f, 1.5f);
 	RotateMatrix = DirectX::XMMatrixRotationY(Rotation * 1.7f);
 	TranslateMatrix = DirectX::XMMatrixTranslation(2.f, 0.f, 0.f);
 
 	srMatrix = DirectX::XMMatrixMultiply(ScaleMatrix, RotateMatrix);
 	WorldMatrix = DirectX::XMMatrixMultiply(srMatrix, TranslateMatrix);
 
-	Result = m_LightShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), WorldMatrix, ViewMatrix, ProjectionMatrix, m_Model->GetTexture(),
-		m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor());
+	Result = m_LightShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), WorldMatrix, ViewMatrix, ProjectionMatrix, m_Model->GetTexture(), m_Camera->GetPosition(),
+									m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(), m_Light->GetDirection(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
 	if (!Result)
 	{
 		return false;

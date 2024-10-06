@@ -12,6 +12,7 @@ LightShader::LightShader()
 	m_PixelShader = 0;
 	m_Layout = 0;
 	m_MatrixBuffer = 0;
+	m_CameraBuffer = 0;
 	m_LightBuffer = 0;
 	m_SampleState = 0;
 }
@@ -57,10 +58,10 @@ void LightShader::Shutdown()
 	ShutdownShader();
 }
 
-bool LightShader::Render(ID3D11DeviceContext* DeviceContext, int IndexCount, DirectX::XMMATRIX WorldMatrix, DirectX::XMMATRIX ViewMatrix, DirectX::XMMATRIX ProjectionMatrix, ID3D11ShaderResourceView* Texture,
-							DirectX::XMFLOAT3 LightDirection, DirectX::XMFLOAT4 AmbientColor, DirectX::XMFLOAT4 DiffuseColor)
+bool LightShader::Render(ID3D11DeviceContext* DeviceContext, int IndexCount, DirectX::XMMATRIX World, DirectX::XMMATRIX View, DirectX::XMMATRIX Proj, ID3D11ShaderResourceView* Texture, DirectX::XMFLOAT3 CameraPos, DirectX::XMFLOAT4 AmbientColor,
+	DirectX::XMFLOAT4 DiffuseColor, DirectX::XMFLOAT3 LightDir, DirectX::XMFLOAT4 SpecularColor, float SpecularPower)
 {
-	bool Result = SetShaderParameters(DeviceContext, WorldMatrix, ViewMatrix, ProjectionMatrix, Texture, LightDirection, AmbientColor, DiffuseColor);
+	bool Result = SetShaderParameters(DeviceContext, World, View, Proj, Texture, CameraPos, AmbientColor, DiffuseColor, LightDir, SpecularColor, SpecularPower);
 	if (!Result)
 	{
 		return false;
@@ -80,6 +81,7 @@ bool LightShader::InitialiseShader(ID3D11Device* Device, HWND hwnd, WCHAR* vsFil
 	D3D11_INPUT_ELEMENT_DESC PolygonLayout[3];
 	unsigned int NumElements;
 	D3D11_BUFFER_DESC MatrixBufferDesc = {};
+	D3D11_BUFFER_DESC CameraBufferDesc = {};
 	D3D11_BUFFER_DESC LightBufferDesc = {};
 	D3D11_SAMPLER_DESC SamplerDesc = {};
 
@@ -156,6 +158,13 @@ bool LightShader::InitialiseShader(ID3D11Device* Device, HWND hwnd, WCHAR* vsFil
 
 	HFALSE_IF_FAILED(Device->CreateBuffer(&MatrixBufferDesc, NULL, &m_MatrixBuffer));
 
+	CameraBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	CameraBufferDesc.ByteWidth = sizeof(CameraBufferType);
+	CameraBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	CameraBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	HFALSE_IF_FAILED(Device->CreateBuffer(&CameraBufferDesc, NULL, &m_CameraBuffer));
+
 	LightBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	LightBufferDesc.ByteWidth = sizeof(LightBufferType);
 	LightBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
@@ -188,6 +197,12 @@ void LightShader::ShutdownShader()
 	{
 		m_LightBuffer->Release();
 		m_LightBuffer = 0;
+	}
+
+	if (m_CameraBuffer)
+	{
+		m_CameraBuffer->Release();
+		m_CameraBuffer = 0;
 	}
 
 	if (m_MatrixBuffer)
@@ -260,33 +275,46 @@ void LightShader::OutputShaderErrorMessage(ID3D10Blob* ErrorMessage, HWND hwnd, 
 	delete[] CombinedWstr;
 }
 
-bool LightShader::SetShaderParameters(ID3D11DeviceContext* DeviceContext, DirectX::XMMATRIX WorldMatrix, DirectX::XMMATRIX ViewMatrix, DirectX::XMMATRIX ProjectionMatrix, ID3D11ShaderResourceView* Texture,
-										DirectX::XMFLOAT3 LightDirection, DirectX::XMFLOAT4 AmbientColor, DirectX::XMFLOAT4 DiffuseColor)
+bool LightShader::SetShaderParameters(ID3D11DeviceContext* DeviceContext, DirectX::XMMATRIX World, DirectX::XMMATRIX View, DirectX::XMMATRIX Proj, ID3D11ShaderResourceView* Texture, DirectX::XMFLOAT3 CameraPos, DirectX::XMFLOAT4 AmbientColor,
+	DirectX::XMFLOAT4 DiffuseColor, DirectX::XMFLOAT3 LightDir, DirectX::XMFLOAT4 SpecularColor, float SpecularPower)
 {
 	HRESULT hResult;
 	D3D11_MAPPED_SUBRESOURCE MappedSubresource = {};
 	MatrixBufferType* DataPtr;
 	LightBufferType* LightDataPtr;
-	unsigned int BufferNumber;
+	CameraBufferType* CameraDataPtr;
+	unsigned int VertexBufferNumber = 0;
+	unsigned int PixelBufferNumber = 0;
 
 	// remember to transpose from row major before sending to shaders
-	WorldMatrix = DirectX::XMMatrixTranspose(WorldMatrix);
-	ViewMatrix = DirectX::XMMatrixTranspose(ViewMatrix);
-	ProjectionMatrix = DirectX::XMMatrixTranspose(ProjectionMatrix);
+	World = DirectX::XMMatrixTranspose(World);
+	View = DirectX::XMMatrixTranspose(View);
+	Proj = DirectX::XMMatrixTranspose(Proj);
 
 	HFALSE_IF_FAILED(DeviceContext->Map(m_MatrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedSubresource));
 
 	DataPtr = (MatrixBufferType*)MappedSubresource.pData;
 
-	DataPtr->World = WorldMatrix;
-	DataPtr->View = ViewMatrix;
-	DataPtr->Projection = ProjectionMatrix;
+	DataPtr->World = World;
+	DataPtr->View = View;
+	DataPtr->Projection = Proj;
 
 	DeviceContext->Unmap(m_MatrixBuffer, 0u);
 
-	BufferNumber = 0;
+	DeviceContext->VSSetConstantBuffers(VertexBufferNumber, 1u, &m_MatrixBuffer);
+	VertexBufferNumber++;
 
-	DeviceContext->VSSetConstantBuffers(BufferNumber, 1u, &m_MatrixBuffer);
+	HFALSE_IF_FAILED(DeviceContext->Map(m_CameraBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedSubresource));
+
+	CameraDataPtr = (CameraBufferType*)MappedSubresource.pData;
+
+	CameraDataPtr->Pos = CameraPos;
+	CameraDataPtr->Padding = 0.f;
+
+	DeviceContext->Unmap(m_CameraBuffer, 0u);
+
+	DeviceContext->VSSetConstantBuffers(VertexBufferNumber, 1u, &m_CameraBuffer);
+	VertexBufferNumber++;
 
 	DeviceContext->PSSetShaderResources(0u, 1u, &Texture);
 
@@ -294,16 +322,16 @@ bool LightShader::SetShaderParameters(ID3D11DeviceContext* DeviceContext, Direct
 
 	LightDataPtr = (LightBufferType*)MappedSubresource.pData;
 
-	LightDataPtr->LightDirection = LightDirection;
+	LightDataPtr->LightDirection = LightDir;
 	LightDataPtr->AmbientColor = AmbientColor;
 	LightDataPtr->DiffuseColor = DiffuseColor;
-	LightDataPtr->Padding = 0.f;
+	LightDataPtr->SpecularColor = SpecularColor;
+	LightDataPtr->SpecularPower = SpecularPower;
 
 	DeviceContext->Unmap(m_LightBuffer, 0u);
 
-	BufferNumber = 0;
-
-	DeviceContext->PSSetConstantBuffers(BufferNumber, 1u, &m_LightBuffer);
+	DeviceContext->PSSetConstantBuffers(PixelBufferNumber, 1u, &m_LightBuffer);
+	PixelBufferNumber++;
 
 	return true;
 }
