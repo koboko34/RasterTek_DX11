@@ -6,7 +6,8 @@
 #include "D3DClass.h"
 #include "CameraClass.h"
 #include "ModelClass.h"
-#include "TextureShaderClass.h"
+#include "LightShader.h"
+#include "Light.h"
 
 const bool FULL_SCREEN = false;
 const bool VSYNC_ENABLED = true;
@@ -25,13 +26,14 @@ public:
 	bool Frame();
 
 private:
-	bool Render();
+	bool Render(float);
 
 private:
 	D3DClass* m_Direct3D;
 	CameraClass* m_Camera;
 	ModelClass* m_Model;
-	TextureShaderClass* m_TextureShader;
+	LightShader* m_LightShader;
+	Light* m_Light;
 
 };
 

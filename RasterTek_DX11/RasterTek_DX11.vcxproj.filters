@@ -30,19 +30,19 @@
     <ClCompile Include="D3DClass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ColorShaderClass.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ModelClass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CameraClass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TextureShaderClass.cpp">
+    <ClCompile Include="TextureClass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TextureClass.cpp">
+    <ClCompile Include="LightShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Light.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -59,16 +59,10 @@
     <ClInclude Include="D3DClass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ColorShaderClass.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ModelClass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CameraClass.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TextureShaderClass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TextureClass.h">
@@ -77,11 +71,15 @@
     <ClInclude Include="MyMacros.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="LightShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Light.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\Color.vs" />
-    <None Include="Shaders\Color.ps" />
-    <None Include="Shaders\Texture.vs" />
-    <None Include="Shaders\Texture.ps" />
+    <None Include="Shaders\LightVS.hlsl" />
+    <None Include="Shaders\LightPS.hlsl" />
   </ItemGroup>
 </Project>

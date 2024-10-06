@@ -63,12 +63,15 @@ bool ModelClass::InitialiseBuffers(ID3D11Device* Device)
 		return false;
 	}
 
-	Vertices[0].Position = DirectX::XMFLOAT3(-1.f, -1.f, 0.f);
-	Vertices[0].TexCoord = DirectX::XMFLOAT2(0.f, 1.f);
-	Vertices[1].Position = DirectX::XMFLOAT3( 0.f,  1.f, 0.f);
-	Vertices[1].TexCoord = DirectX::XMFLOAT2(0.5f, 0.f);
-	Vertices[2].Position = DirectX::XMFLOAT3( 1.f, -1.f, 0.f);
-	Vertices[2].TexCoord = DirectX::XMFLOAT2(1.f, 1.f);
+	Vertices[0].Position = DirectX::XMFLOAT3(-1.f, -1.f,  0.f);
+	Vertices[0].TexCoord = DirectX::XMFLOAT2( 0.f,  1.f);
+	Vertices[0].Normal   = DirectX::XMFLOAT3( 0.f,  0.f, -1.f);
+	Vertices[1].Position = DirectX::XMFLOAT3( 0.f,  1.f,  0.f);
+	Vertices[1].TexCoord = DirectX::XMFLOAT2( 0.5f, 0.f);
+	Vertices[1].Normal   = DirectX::XMFLOAT3( 0.f,  0.f, -1.f);
+	Vertices[2].Position = DirectX::XMFLOAT3( 1.f, -1.f,  0.f);
+	Vertices[2].TexCoord = DirectX::XMFLOAT2( 1.f,  1.f);
+	Vertices[2].Normal   = DirectX::XMFLOAT3( 0.f,  0.f, -1.f);
 
 	Indices[0] = 0u;
 	Indices[1] = 1u;
