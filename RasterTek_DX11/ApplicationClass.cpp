@@ -19,6 +19,7 @@ ApplicationClass::~ApplicationClass()
 
 bool ApplicationClass::Initialise(int ScreenWidth, int ScreenHeight, HWND hwnd)
 {
+	char ModelFilename[128];
 	char TextureFilename[128];
 	
 	m_Direct3D = new D3DClass();
@@ -34,10 +35,11 @@ bool ApplicationClass::Initialise(int ScreenWidth, int ScreenHeight, HWND hwnd)
 	m_Camera = new CameraClass();
 	m_Camera->SetPosition(0.f, 0.f, -5.f);
 
+	strcpy_s(ModelFilename, "Models/cube.txt");
 	strcpy_s(TextureFilename, "Textures/stone01.tga");
 
 	m_Model = new ModelClass();
-	Result = m_Model->Initialise(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), TextureFilename);
+	Result = m_Model->Initialise(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), ModelFilename, TextureFilename);
 	if (!Result)
 	{
 		MessageBox(hwnd, L"Failed to initialise to model object!", L"Error", MB_OK);

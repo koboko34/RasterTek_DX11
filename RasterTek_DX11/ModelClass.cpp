@@ -7,6 +7,7 @@ ModelClass::ModelClass()
 	m_VertexBuffer = 0;
 	m_IndexBuffer = 0;
 	m_Texture = 0;
+	m_Model = 0;
 }
 
 ModelClass::ModelClass(const ModelClass&)
@@ -17,10 +18,11 @@ ModelClass::~ModelClass()
 {
 }
 
-bool ModelClass::Initialise(ID3D11Device* Device, ID3D11DeviceContext* DeviceContext, char* TextureFilename)
+bool ModelClass::Initialise(ID3D11Device* Device, ID3D11DeviceContext* DeviceContext, char* ModelFilename, char* TextureFilename)
 {
 	bool Result;
 	
+	FALSE_IF_FAILED(LoadModel(ModelFilename));
 	FALSE_IF_FAILED(InitialiseBuffers(Device));
 	FALSE_IF_FAILED(LoadTexture(Device, DeviceContext, TextureFilename));
 	
@@ -31,6 +33,7 @@ void ModelClass::Shutdown()
 {
 	ReleaseTexture();
 	ShutdownBuffers();
+	ReleaseModel();
 }
 
 void ModelClass::Render(ID3D11DeviceContext* DeviceContext)
@@ -48,34 +51,17 @@ bool ModelClass::InitialiseBuffers(ID3D11Device* Device)
 	D3D11_SUBRESOURCE_DATA IndexData = {};
 	HRESULT hResult;
 
-	m_VertexCount = 3;
-	m_IndexCount = 3;
-
 	Vertices = new VertexType[m_VertexCount];
-	if (!Vertices)
-	{
-		return false;
-	}
-
 	Indices = new unsigned long[m_IndexCount];
-	if (!Indices)
+
+	for (int i = 0; i < m_VertexCount; i++)
 	{
-		return false;
+		Vertices[i].Position = DirectX::XMFLOAT3(m_Model[i].x, m_Model[i].y, m_Model[i].z);
+		Vertices[i].TexCoord = DirectX::XMFLOAT2(m_Model[i].u, m_Model[i].v);
+		Vertices[i].Normal = DirectX::XMFLOAT3(m_Model[i].nx, m_Model[i].ny, m_Model[i].nz);
+
+		Indices[i] = i;
 	}
-
-	Vertices[0].Position = DirectX::XMFLOAT3(-1.f, -1.f,  0.f);
-	Vertices[0].TexCoord = DirectX::XMFLOAT2( 0.f,  1.f);
-	Vertices[0].Normal   = DirectX::XMFLOAT3( 0.f,  0.f, -1.f);
-	Vertices[1].Position = DirectX::XMFLOAT3( 0.f,  1.f,  0.f);
-	Vertices[1].TexCoord = DirectX::XMFLOAT2( 0.5f, 0.f);
-	Vertices[1].Normal   = DirectX::XMFLOAT3( 0.f,  0.f, -1.f);
-	Vertices[2].Position = DirectX::XMFLOAT3( 1.f, -1.f,  0.f);
-	Vertices[2].TexCoord = DirectX::XMFLOAT2( 1.f,  1.f);
-	Vertices[2].Normal   = DirectX::XMFLOAT3( 0.f,  0.f, -1.f);
-
-	Indices[0] = 0u;
-	Indices[1] = 1u;
-	Indices[2] = 2u;
 
 	VertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	VertexBufferDesc.ByteWidth = sizeof(VertexType) * m_VertexCount;
@@ -147,5 +133,58 @@ void ModelClass::ReleaseTexture()
 		m_Texture->Shutdown();
 		delete m_Texture;
 		m_Texture = 0;
+	}
+}
+
+bool ModelClass::LoadModel(char* Filename)
+{
+	std::ifstream fin;
+	char Input;
+	int i;
+
+	fin.open(Filename);
+	if (fin.fail())
+	{
+		return false;
+	}
+
+	fin.get(Input);
+	while (Input != ':')
+	{
+		fin.get(Input);
+	}
+
+	fin >> m_VertexCount;
+
+	m_IndexCount = m_VertexCount;
+
+	m_Model = new ModelType[m_VertexCount];
+
+	fin.get(Input);
+	while (Input != ':')
+	{
+		fin.get(Input);
+	}
+	fin.get(Input);
+	fin.get(Input);
+
+	for (i = 0; i < m_VertexCount; i++)
+	{
+		fin >> m_Model[i].x >> m_Model[i].y >> m_Model[i].z;
+		fin >> m_Model[i].u >> m_Model[i].v;
+		fin >> m_Model[i].nx >> m_Model[i].ny >> m_Model[i].nz;
+	}
+
+	fin.close();
+
+	return true;
+}
+
+void ModelClass::ReleaseModel()
+{
+	if (m_Model)
+	{
+		delete[] m_Model;
+		m_Model = 0;
 	}
 }
