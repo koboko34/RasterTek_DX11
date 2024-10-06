@@ -55,6 +55,7 @@ bool ApplicationClass::Initialise(int ScreenWidth, int ScreenHeight, HWND hwnd)
 	}
 
 	m_Light = new Light();
+	m_Light->SetAmbientColor(0.2f, 0.2f, 0.2f, 1.f);
 	m_Light->SetDiffuseColor(1.f, 1.f, 1.f, 1.f);
 	m_Light->SetDirection(0.f, 0.f, 1.f);
 
@@ -136,7 +137,7 @@ bool ApplicationClass::Render(float Rotation)
 	m_Model->Render(m_Direct3D->GetDeviceContext());
 
 	Result = m_LightShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), WorldMatrix, ViewMatrix, ProjectionMatrix, m_Model->GetTexture(),
-									m_Light->GetDirection(), m_Light->GetDiffuseColor());
+									m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor());
 	if (!Result)
 	{
 		return false;
@@ -150,7 +151,7 @@ bool ApplicationClass::Render(float Rotation)
 	WorldMatrix = DirectX::XMMatrixMultiply(srMatrix, TranslateMatrix);
 
 	Result = m_LightShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), WorldMatrix, ViewMatrix, ProjectionMatrix, m_Model->GetTexture(),
-		m_Light->GetDirection(), m_Light->GetDiffuseColor());
+		m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor());
 	if (!Result)
 	{
 		return false;

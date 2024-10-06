@@ -58,9 +58,9 @@ void LightShader::Shutdown()
 }
 
 bool LightShader::Render(ID3D11DeviceContext* DeviceContext, int IndexCount, DirectX::XMMATRIX WorldMatrix, DirectX::XMMATRIX ViewMatrix, DirectX::XMMATRIX ProjectionMatrix, ID3D11ShaderResourceView* Texture,
-							DirectX::XMFLOAT3 LightDirection, DirectX::XMFLOAT4 DiffuseColor)
+							DirectX::XMFLOAT3 LightDirection, DirectX::XMFLOAT4 AmbientColor, DirectX::XMFLOAT4 DiffuseColor)
 {
-	bool Result = SetShaderParameters(DeviceContext, WorldMatrix, ViewMatrix, ProjectionMatrix, Texture, LightDirection, DiffuseColor);
+	bool Result = SetShaderParameters(DeviceContext, WorldMatrix, ViewMatrix, ProjectionMatrix, Texture, LightDirection, AmbientColor, DiffuseColor);
 	if (!Result)
 	{
 		return false;
@@ -261,7 +261,7 @@ void LightShader::OutputShaderErrorMessage(ID3D10Blob* ErrorMessage, HWND hwnd, 
 }
 
 bool LightShader::SetShaderParameters(ID3D11DeviceContext* DeviceContext, DirectX::XMMATRIX WorldMatrix, DirectX::XMMATRIX ViewMatrix, DirectX::XMMATRIX ProjectionMatrix, ID3D11ShaderResourceView* Texture,
-										DirectX::XMFLOAT3 LightDirection, DirectX::XMFLOAT4 DiffuseColor)
+										DirectX::XMFLOAT3 LightDirection, DirectX::XMFLOAT4 AmbientColor, DirectX::XMFLOAT4 DiffuseColor)
 {
 	HRESULT hResult;
 	D3D11_MAPPED_SUBRESOURCE MappedSubresource = {};
@@ -295,6 +295,7 @@ bool LightShader::SetShaderParameters(ID3D11DeviceContext* DeviceContext, Direct
 	LightDataPtr = (LightBufferType*)MappedSubresource.pData;
 
 	LightDataPtr->LightDirection = LightDirection;
+	LightDataPtr->AmbientColor = AmbientColor;
 	LightDataPtr->DiffuseColor = DiffuseColor;
 	LightDataPtr->Padding = 0.f;
 

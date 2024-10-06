@@ -3,6 +3,7 @@ SamplerState SampleType : register(s0);
 
 cbuffer LightBuffer
 {
+    float4 AmbientColor;
     float4 DiffuseColor;
     float3 LightDirection;
     float Padding;
@@ -24,10 +25,17 @@ float4 main(PS_In p) : SV_TARGET
     
     TextureColor = ShaderTexture.Sample(SampleType, p.TexCoord);
     
+    Color = AmbientColor;
+    
     LightDir = -LightDirection;
     LightIntensity = saturate(dot(p.Normal, LightDir));
     
-    Color = saturate(DiffuseColor * LightIntensity);
+    if (LightIntensity > 0.f)
+    {
+        Color += (DiffuseColor * LightIntensity);
+    }
+    
+    Color = saturate(Color);
     Color *= TextureColor;
     
     return Color;
