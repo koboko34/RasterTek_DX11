@@ -33,7 +33,7 @@ bool ApplicationClass::Initialise(int ScreenWidth, int ScreenHeight, HWND hwnd)
 	}
 
 	m_Camera = new CameraClass();
-	m_Camera->SetPosition(0.f, 0.f, -5.f);
+	m_Camera->SetPosition(0.f, 0.f, -10.f);
 
 	strcpy_s(ModelFilename, "Models/cube.txt");
 	strcpy_s(TextureFilename, "Textures/stone01.tga");
@@ -117,7 +117,7 @@ bool ApplicationClass::Frame()
 
 bool ApplicationClass::Render(float Rotation)
 {
-	DirectX::XMMATRIX WorldMatrix, ViewMatrix, ProjectionMatrix;
+	DirectX::XMMATRIX WorldMatrix, ViewMatrix, ProjectionMatrix, RotateMatrix, TranslateMatrix, ScaleMatrix, srMatrix;
 	bool Result;
 	
 	m_Direct3D->BeginScene(0.f, 0.f, 0., 1.f);
@@ -128,12 +128,29 @@ bool ApplicationClass::Render(float Rotation)
 	m_Camera->GetViewMatrix(ViewMatrix);
 	m_Direct3D->GetProjectionMatrix(ProjectionMatrix);
 
-	WorldMatrix = DirectX::XMMatrixRotationY(Rotation);
+	RotateMatrix = DirectX::XMMatrixRotationY(Rotation);
+	TranslateMatrix = DirectX::XMMatrixTranslation(-2.f, 0.f, 0.f);
+
+	WorldMatrix = DirectX::XMMatrixMultiply(RotateMatrix, TranslateMatrix);
 
 	m_Model->Render(m_Direct3D->GetDeviceContext());
 
 	Result = m_LightShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), WorldMatrix, ViewMatrix, ProjectionMatrix, m_Model->GetTexture(),
 									m_Light->GetDirection(), m_Light->GetDiffuseColor());
+	if (!Result)
+	{
+		return false;
+	}
+
+	ScaleMatrix = DirectX::XMMatrixScaling(0.5f, 0.5f, 0.5f);
+	RotateMatrix = DirectX::XMMatrixRotationY(Rotation * 1.7f);
+	TranslateMatrix = DirectX::XMMatrixTranslation(2.f, 0.f, 0.f);
+
+	srMatrix = DirectX::XMMatrixMultiply(ScaleMatrix, RotateMatrix);
+	WorldMatrix = DirectX::XMMatrixMultiply(srMatrix, TranslateMatrix);
+
+	Result = m_LightShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), WorldMatrix, ViewMatrix, ProjectionMatrix, m_Model->GetTexture(),
+		m_Light->GetDirection(), m_Light->GetDiffuseColor());
 	if (!Result)
 	{
 		return false;
