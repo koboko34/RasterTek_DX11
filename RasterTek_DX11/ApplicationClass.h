@@ -33,7 +33,8 @@ private:
 	CameraClass* m_Camera;
 	ModelClass* m_Model;
 	LightShader* m_LightShader;
-	Light* m_Light;
+	Light* m_Lights;
+	int m_NumLights;
 
 };
 

@@ -6,7 +6,7 @@ ApplicationClass::ApplicationClass()
 	m_Camera = 0;
 	m_Model = 0;
 	m_LightShader = 0;
-	m_Light = 0;
+	m_Lights = 0;
 }
 
 ApplicationClass::ApplicationClass(const ApplicationClass&)
@@ -33,9 +33,9 @@ bool ApplicationClass::Initialise(int ScreenWidth, int ScreenHeight, HWND hwnd)
 	}
 
 	m_Camera = new CameraClass();
-	m_Camera->SetPosition(0.f, 0.f, -10.f);
+	m_Camera->SetPosition(0.f, 2.f, -12.f);
 
-	strcpy_s(ModelFilename, "Models/sphere.txt");
+	strcpy_s(ModelFilename, "Models/plane.txt");
 	strcpy_s(TextureFilename, "Textures/stone01.tga");
 
 	m_Model = new ModelClass();
@@ -54,22 +54,31 @@ bool ApplicationClass::Initialise(int ScreenWidth, int ScreenHeight, HWND hwnd)
 		return false;
 	}
 
-	m_Light = new Light();
-	m_Light->SetAmbientColor(0.2f, 0.2f, 0.2f, 1.f);
-	m_Light->SetDiffuseColor(1.f, 1.f, 1.f, 1.f);
-	m_Light->SetDirection(0.5f, -0.7f, 0.7f);
-	m_Light->SetSpecularColor(1.f, 1.f, 1.f, 1.f);
-	m_Light->SetSpecularPower(32.f);
+	m_NumLights = 4;
+
+	m_Lights = new Light[m_NumLights];
+
+	m_Lights[0].SetDiffuseColor(1.f, 0.f, 0.f, 1.f);
+	m_Lights[0].SetPosition(-3.f, 1.f, 3.f);
+
+	m_Lights[1].SetDiffuseColor(0.f, 1.f, 0.f, 1.f);
+	m_Lights[1].SetPosition(3.f, 1.f, 3.f);
+
+	m_Lights[2].SetDiffuseColor(0.f, 0.f, 1.f, 1.f);
+	m_Lights[2].SetPosition(-3.f, 1.f, -3.f);
+
+	m_Lights[3].SetDiffuseColor(1.f, 1.f, 1.f, 1.f);
+	m_Lights[3].SetPosition(3.f, 1.f, -3.f);
 
 	return true;
 }
 
 void ApplicationClass::Shutdown()
 {
-	if (m_Light)
+	if (m_Lights)
 	{
-		delete m_Light;
-		m_Light = 0;
+		delete[] m_Lights;
+		m_Lights = 0;
 	}
 	
 	if (m_LightShader)
@@ -120,7 +129,8 @@ bool ApplicationClass::Frame()
 
 bool ApplicationClass::Render(float Rotation)
 {
-	DirectX::XMMATRIX WorldMatrix, ViewMatrix, ProjectionMatrix, RotateMatrix, TranslateMatrix, ScaleMatrix, srMatrix;
+	DirectX::XMMATRIX WorldMatrix, ViewMatrix, ProjectionMatrix;
+	DirectX::XMFLOAT4 DiffuseColors[4], LightPositions[4];
 	bool Result;
 	
 	m_Direct3D->BeginScene(0.f, 0.f, 0., 1.f);
@@ -131,29 +141,15 @@ bool ApplicationClass::Render(float Rotation)
 	m_Camera->GetViewMatrix(ViewMatrix);
 	m_Direct3D->GetProjectionMatrix(ProjectionMatrix);
 
-	RotateMatrix = DirectX::XMMatrixRotationY(Rotation);
-	TranslateMatrix = DirectX::XMMatrixTranslation(-2.f, 0.f, 0.f);
-
-	WorldMatrix = DirectX::XMMatrixMultiply(RotateMatrix, TranslateMatrix);
+	for (int i = 0; i < m_NumLights; i++)
+	{
+		DiffuseColors[i] = m_Lights[i].GetDiffuseColor();
+		LightPositions[i] = m_Lights[i].GetPosition();
+	}
 
 	m_Model->Render(m_Direct3D->GetDeviceContext());
 
-	Result = m_LightShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), WorldMatrix, ViewMatrix, ProjectionMatrix, m_Model->GetTexture(), m_Camera->GetPosition(),
-									m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(), m_Light->GetDirection(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
-	if (!Result)
-	{
-		return false;
-	}
-
-	ScaleMatrix = DirectX::XMMatrixScaling(1.5f, 1.5f, 1.5f);
-	RotateMatrix = DirectX::XMMatrixRotationY(Rotation * 1.7f);
-	TranslateMatrix = DirectX::XMMatrixTranslation(2.f, 0.f, 0.f);
-
-	srMatrix = DirectX::XMMatrixMultiply(ScaleMatrix, RotateMatrix);
-	WorldMatrix = DirectX::XMMatrixMultiply(srMatrix, TranslateMatrix);
-
-	Result = m_LightShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), WorldMatrix, ViewMatrix, ProjectionMatrix, m_Model->GetTexture(), m_Camera->GetPosition(),
-									m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(), m_Light->GetDirection(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+	Result = m_LightShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), WorldMatrix, ViewMatrix, ProjectionMatrix, m_Model->GetTexture(), DiffuseColors, LightPositions);
 	if (!Result)
 	{
 		return false;

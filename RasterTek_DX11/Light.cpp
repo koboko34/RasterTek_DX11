@@ -32,6 +32,11 @@ void Light::SetSpecularColor(float r, float g, float b, float a)
 	m_SpecularColor = DirectX::XMFLOAT4(r, g, b, a);
 }
 
+void Light::SetPosition(float x, float y, float z)
+{
+	m_Position = DirectX::XMFLOAT4(x, y, z, 1.f);
+}
+
 void Light::SetSpecularPower(float Power)
 {
 	m_SpecularPower = Power;
